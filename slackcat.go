@@ -8,7 +8,39 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/user"
 )
+
+type Config struct {
+	WebhookUrl string `json:"webhook_url"`
+}
+
+func ReadConfig() (*Config, error) {
+	homeDir := ""
+	usr, err := user.Current()
+	if err == nil {
+		homeDir = usr.HomeDir
+	}
+
+	for _, path := range []string{"/etc/slackcat.conf", homeDir + "/.slackcat.conf", "./slackcat.conf"} {
+		file, err := os.Open(path)
+		if os.IsNotExist(err) {
+			continue
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		json.NewDecoder(file)
+		conf := Config{}
+		err = json.NewDecoder(file).Decode(&conf)
+		if err != nil {
+			return nil, err
+		}
+		return &conf, nil
+	}
+	return &Config{}, nil
+}
 
 type SlackMsg struct {
 	//	Username string `json:"username"`
@@ -42,6 +74,10 @@ func (m SlackMsg) Post(WebhookURL string) error {
 
 func main() {
 
+	cfg, err := ReadConfig()
+	if err != nil {
+		log.Fatalf("Coult not read config: %v", err)
+	}
 	bytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatalf("Cannot read STDIN: %v", err)
@@ -51,7 +87,7 @@ func main() {
 		Text: string(bytes),
 	}
 
-	err = msg.Post("https://ph.slack.com/services/hooks/incoming-webhook?token=VxHgickriL7nFVYNAxbCOmba")
+	err = msg.Post(cfg.WebhookUrl)
 	if err != nil {
 		log.Fatalf("Post failed: %v", err)
 	}
