@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -43,8 +44,8 @@ func ReadConfig() (*Config, error) {
 }
 
 type SlackMsg struct {
-	//	Username string `json:"username"`
-	Text string `json:"text"`
+	Username string `json:"username"`
+	Text     string `json:"text"`
 }
 
 func (m SlackMsg) Encode() (string, error) {
@@ -72,6 +73,21 @@ func (m SlackMsg) Post(WebhookURL string) error {
 	return nil
 }
 
+func username() string {
+	username := "<unknown>"
+	usr, err := user.Current()
+	if err == nil {
+		username = usr.Username
+	}
+
+	hostname := "<unknown>"
+	host, err := os.Hostname()
+	if err == nil {
+		hostname = host
+	}
+	return fmt.Sprintf("%s@%s", username, hostname)
+}
+
 func main() {
 
 	cfg, err := ReadConfig()
@@ -84,7 +100,8 @@ func main() {
 	}
 
 	msg := SlackMsg{
-		Text: string(bytes),
+		Username: username(),
+		Text:     string(bytes),
 	}
 
 	err = msg.Post(cfg.WebhookUrl)
