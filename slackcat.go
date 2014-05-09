@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -95,19 +95,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("Coult not read config: %v", err)
 	}
-	bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		log.Fatalf("Cannot read STDIN: %v", err)
-	}
 
-	msg := SlackMsg{
-		Parse:    "full",
-		Username: username(),
-		Text:     string(bytes),
-	}
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		msg := SlackMsg{
+			Parse:    "full",
+			Username: username(),
+			Text:     scanner.Text(),
+		}
 
-	err = msg.Post(cfg.WebhookUrl)
-	if err != nil {
-		log.Fatalf("Post failed: %v", err)
+		err = msg.Post(cfg.WebhookUrl)
+		if err != nil {
+			log.Fatalf("Post failed: %v", err)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatalf("Error reading: %v", err)
 	}
 }
