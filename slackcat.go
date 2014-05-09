@@ -100,11 +100,12 @@ func main() {
 		log.Fatalf("Coult not read config: %v", err)
 	}
 
-	channel := pflag.StringP("channel", "c", "", "channel")
-	pflag.Parse()
-	if *channel == "" {
-		channel = &cfg.Channel
+	pflag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel]")
 	}
+
+	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
+	pflag.Parse()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
