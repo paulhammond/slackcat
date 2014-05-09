@@ -10,10 +10,13 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+
+	"github.com/ogier/pflag"
 )
 
 type Config struct {
 	WebhookUrl string `json:"webhook_url"`
+	Channel    string `json:"channel"`
 }
 
 func ReadConfig() (*Config, error) {
@@ -44,6 +47,7 @@ func ReadConfig() (*Config, error) {
 }
 
 type SlackMsg struct {
+	Channel  string `json:"channel"`
 	Username string `json:"username"`
 	Text     string `json:"text"`
 	Parse    string `json:"parse"`
@@ -96,9 +100,16 @@ func main() {
 		log.Fatalf("Coult not read config: %v", err)
 	}
 
+	channel := pflag.StringP("channel", "c", "", "channel")
+	pflag.Parse()
+	if *channel == "" {
+		channel = &cfg.Channel
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
+			Channel:  *channel,
 			Parse:    "full",
 			Username: username(),
 			Text:     scanner.Text(),
