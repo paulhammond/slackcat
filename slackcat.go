@@ -46,6 +46,7 @@ func ReadConfig() (*Config, error) {
 type SlackMsg struct {
 	Username string `json:"username"`
 	Text     string `json:"text"`
+	Parse    string `json:"parse"`
 }
 
 func (m SlackMsg) Encode() (string, error) {
@@ -100,6 +101,7 @@ func main() {
 	}
 
 	msg := SlackMsg{
+		Parse:    "full",
 		Username: username(),
 		Text:     string(bytes),
 	}
