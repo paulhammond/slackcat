@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"strings"
 
 	"github.com/ogier/pflag"
 )
@@ -101,13 +102,31 @@ func main() {
 	}
 
 	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name]")
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [message]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", username(), "name")
 	pflag.Parse()
 
+	// was there a message on the command line? If so use it.
+	args := pflag.Args()
+	if len(args) > 0 {
+		msg := SlackMsg{
+			Channel:  *channel,
+			Username: *name,
+			Parse:    "full",
+			Text:     strings.Join(args, " "),
+		}
+
+		err = msg.Post(cfg.WebhookUrl)
+		if err != nil {
+			log.Fatalf("Post failed: %v", err)
+		}
+		os.Exit(0)
+	}
+
+	// ...Otherwise scan stdin
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
