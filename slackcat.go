@@ -101,18 +101,19 @@ func main() {
 	}
 
 	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel]")
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
+	name := pflag.StringP("name", "n", username(), "name")
 	pflag.Parse()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
 			Channel:  *channel,
+			Username: *name,
 			Parse:    "full",
-			Username: username(),
 			Text:     scanner.Text(),
 		}
 
