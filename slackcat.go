@@ -100,7 +100,7 @@ func main() {
 
 	cfg, err := ReadConfig()
 	if err != nil {
-		log.Fatalf("Coult not read config: %v", err)
+		log.Fatalf("Could not read config: %v", err)
 	}
 
 	pflag.Usage = func() {
