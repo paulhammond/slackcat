@@ -125,7 +125,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Post failed: %v", err)
 		}
-		os.Exit(0)
+		return
 	}
 
 	// ...Otherwise scan stdin
