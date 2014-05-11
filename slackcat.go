@@ -50,10 +50,11 @@ func ReadConfig() (*Config, error) {
 }
 
 type SlackMsg struct {
-	Channel  string `json:"channel"`
-	Username string `json:"username"`
-	Text     string `json:"text"`
-	Parse    string `json:"parse"`
+	Channel   string `json:"channel"`
+	Username  string `json:"username"`
+	Text      string `json:"text"`
+	Parse     string `json:"parse"`
+	IconEmoji string `json:"icon_emoji,omitempty"`
 }
 
 func (m SlackMsg) Encode() (string, error) {
@@ -104,21 +105,23 @@ func main() {
 	}
 
 	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [message]")
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", username(), "name")
+	icon := pflag.StringP("icon", "i", "", "icon")
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
 	args := pflag.Args()
 	if len(args) > 0 {
 		msg := SlackMsg{
-			Channel:  *channel,
-			Username: *name,
-			Parse:    "full",
-			Text:     strings.Join(args, " "),
+			Channel:   *channel,
+			Username:  *name,
+			Parse:     "full",
+			Text:      strings.Join(args, " "),
+			IconEmoji: *icon,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
@@ -132,10 +135,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
-			Channel:  *channel,
-			Username: *name,
-			Parse:    "full",
-			Text:     scanner.Text(),
+			Channel:   *channel,
+			Username:  *name,
+			Parse:     "full",
+			Text:      scanner.Text(),
+			IconEmoji: *icon,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
