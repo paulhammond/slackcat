@@ -54,6 +54,7 @@ type SlackMsg struct {
 	Username string `json:"username"`
 	Text     string `json:"text"`
 	Parse    string `json:"parse"`
+	Icon     string `json:"icon_emoji,omitempty"`
 }
 
 func (m SlackMsg) Encode() (string, error) {
@@ -104,11 +105,12 @@ func main() {
 	}
 
 	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [message]")
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon-emoji] [message]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", username(), "name")
+	icon := pflag.StringP("icon", "i", "", "icon")
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
@@ -119,6 +121,7 @@ func main() {
 			Username: *name,
 			Parse:    "full",
 			Text:     strings.Join(args, " "),
+			Icon:     *icon,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
@@ -136,6 +139,7 @@ func main() {
 			Username: *name,
 			Parse:    "full",
 			Text:     scanner.Text(),
+			Icon:     *icon,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
