@@ -46,7 +46,8 @@ func ReadConfig() (*Config, error) {
 		}
 		return &conf, nil
 	}
-	return &Config{}, nil
+
+	return nil, errors.New("Config file not found")
 }
 
 type SlackMsg struct {
