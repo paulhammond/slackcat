@@ -18,8 +18,9 @@ import (
 )
 
 type Config struct {
-	WebhookUrl string `json:"webhook_url"`
-	Channel    string `json:"channel"`
+	WebhookUrl string  `json:"webhook_url"`
+	Channel    string  `json:"channel"`
+	Username   *string `json:"username"`
 }
 
 func ReadConfig() (*Config, error) {
@@ -52,7 +53,7 @@ func ReadConfig() (*Config, error) {
 
 type SlackMsg struct {
 	Channel   string `json:"channel"`
-	Username  string `json:"username"`
+	Username  string `json:"username,omitempty"`
 	Text      string `json:"text"`
 	Parse     string `json:"parse"`
 	IconEmoji string `json:"icon_emoji,omitempty"`
@@ -105,12 +106,20 @@ func main() {
 		log.Fatalf("Could not read config: %v", err)
 	}
 
+	// By default use "user@server", unless overridden by config. cfg.Username
+	// can be "", implying Slack should use the default username, so we have
+	// to check if the value was set, not just for a non-empty string.
+	defaultName := username()
+	if cfg.Username != nil {
+		defaultName = *cfg.Username
+	}
+
 	pflag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
-	name := pflag.StringP("name", "n", username(), "name")
+	name := pflag.StringP("name", "n", defaultName, "name")
 	icon := pflag.StringP("icon", "i", "", "icon")
 	pflag.Parse()
 
