@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/ogier/pflag"
+	"io/ioutil"
 )
 
 type Config struct {
@@ -78,8 +79,15 @@ func (m SlackMsg) Post(WebhookURL string) error {
 		return err
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("Not OK")
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		return errors.New(fmt.Sprintf("Not OK: %d, %s", resp.StatusCode, body))
 	}
 	return nil
 }
