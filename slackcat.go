@@ -84,6 +84,12 @@ func (c *Config) loadConfigFiles() error {
 	return nil
 }
 
+func (c *Config) BindFlags() {
+	pflag.StringVarP(&c.Channel, "channel", "c", c.Channel, "channel")
+	pflag.StringVarP(&c.Username, "name", "n", c.Username, "name")
+	pflag.StringVarP(&c.IconEmoji, "icon", "i", c.IconEmoji, "icon")
+}
+
 type SlackMsg struct {
 	Channel   string `json:"channel"`
 	Username  string `json:"username,omitempty"`
@@ -133,30 +139,27 @@ func defaultUsername() string {
 }
 
 func main() {
+	pflag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
+	}
+
 	cfg := Config{Username: defaultUsername()}
 	err := cfg.Load()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
-
-	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
-	}
-
-	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
-	name := pflag.StringP("name", "n", cfg.Username, "name") // TODO: username or name?
-	icon := pflag.StringP("icon", "i", cfg.IconEmoji, "icon")
+	cfg.BindFlags()
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
 	args := pflag.Args()
 	if len(args) > 0 {
 		msg := SlackMsg{
-			Channel:   *channel,
-			Username:  *name,
+			Channel:   cfg.Channel,
+			Username:  cfg.Username,
 			Parse:     "full",
 			Text:      strings.Join(args, " "),
-			IconEmoji: *icon,
+			IconEmoji: cfg.IconEmoji,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
@@ -170,11 +173,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
-			Channel:   *channel,
-			Username:  *name,
+			Channel:   cfg.Channel,
+			Username:  cfg.Username,
 			Parse:     "full",
 			Text:      scanner.Text(),
-			IconEmoji: *icon,
+			IconEmoji: cfg.IconEmoji,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
