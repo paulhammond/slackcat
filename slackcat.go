@@ -20,10 +20,46 @@ import (
 type Config struct {
 	WebhookUrl string  `json:"webhook_url"`
 	Channel    string  `json:"channel"`
-	Username   *string `json:"username"`
+	Username   string  `json:"username"`
+	IconEmoji  string  `json:"icon_emoji"`
 }
 
-func ReadConfig() (*Config, error) {
+func (c *Config) Load() error {
+	err := c.loadConfigFiles()
+	if err != nil {
+		return err
+	}
+	c.loadEnvVars()
+
+	if c.WebhookUrl == "" {
+		return errors.New("Could not find a WebhookUrl in SLACKCAT_WEBHOOK_URL, /etc/slackcat.conf, /.slackcat.conf, ./slackcat.conf")
+	}
+
+	return nil
+}
+
+func (c *Config) loadEnvVars() {
+	envs := []string{"SLACKCAT_WEBHOOK_URL", "SLACKCAT_CHANNEL", "SLACKCAT_USERNAME", "SLACKCAT_ICON"}
+	for _,env := range envs {
+		envVal := os.Getenv(env)
+		if envVal == "" {
+			continue
+		}
+
+		switch env {
+		case "SLACKCAT_WEBHOOK_URL":
+			c.WebhookUrl = envVal
+		case "SLACKCAT_CHANNEL":
+			c.Channel = envVal
+		case "SLACKCAT_USERNAME":
+			c.Username = envVal
+		case "SLACKCAT_ICON":
+			c.IconEmoji = envVal
+		}
+	}
+}
+
+func (c *Config) loadConfigFiles() error {
 	homeDir := ""
 	usr, err := user.Current()
 	if err == nil {
@@ -36,19 +72,22 @@ func ReadConfig() (*Config, error) {
 			continue
 		}
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		json.NewDecoder(file)
-		conf := Config{}
-		err = json.NewDecoder(file).Decode(&conf)
+		err = json.NewDecoder(file).Decode(c)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		return &conf, nil
 	}
 
-	return nil, errors.New("Config file not found")
+	return nil
+}
+
+func (c *Config) BindFlags() {
+	pflag.StringVarP(&c.Channel, "channel", "c", c.Channel, "channel")
+	pflag.StringVarP(&c.Username, "name", "n", c.Username, "name")
+	pflag.StringVarP(&c.IconEmoji, "icon", "i", c.IconEmoji, "icon")
 }
 
 type SlackMsg struct {
@@ -84,7 +123,7 @@ func (m SlackMsg) Post(WebhookURL string) error {
 	return nil
 }
 
-func username() string {
+func defaultUsername() string {
 	username := "<unknown>"
 	usr, err := user.Current()
 	if err == nil {
@@ -100,38 +139,27 @@ func username() string {
 }
 
 func main() {
-
-	cfg, err := ReadConfig()
-	if err != nil {
-		log.Fatalf("Could not read config: %v", err)
-	}
-
-	// By default use "user@server", unless overridden by config. cfg.Username
-	// can be "", implying Slack should use the default username, so we have
-	// to check if the value was set, not just for a non-empty string.
-	defaultName := username()
-	if cfg.Username != nil {
-		defaultName = *cfg.Username
-	}
-
 	pflag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
 	}
 
-	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
-	name := pflag.StringP("name", "n", defaultName, "name")
-	icon := pflag.StringP("icon", "i", "", "icon")
+	cfg := Config{Username: defaultUsername()}
+	err := cfg.Load()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	cfg.BindFlags()
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
 	args := pflag.Args()
 	if len(args) > 0 {
 		msg := SlackMsg{
-			Channel:   *channel,
-			Username:  *name,
+			Channel:   cfg.Channel,
+			Username:  cfg.Username,
 			Parse:     "full",
 			Text:      strings.Join(args, " "),
-			IconEmoji: *icon,
+			IconEmoji: cfg.IconEmoji,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
@@ -145,11 +173,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		msg := SlackMsg{
-			Channel:   *channel,
-			Username:  *name,
+			Channel:   cfg.Channel,
+			Username:  cfg.Username,
 			Parse:     "full",
 			Text:      scanner.Text(),
-			IconEmoji: *icon,
+			IconEmoji: cfg.IconEmoji,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
@@ -157,7 +185,7 @@ func main() {
 			log.Fatalf("Post failed: %v", err)
 		}
 	}
-	if err := scanner.Err(); err != nil {
+	if err = scanner.Err(); err != nil {
 		log.Fatalf("Error reading: %v", err)
 	}
 }
