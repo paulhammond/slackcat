@@ -10,15 +10,23 @@ If you have a working go installation run `go get github.com/paulhammond/slackca
 
 ## Configuring
 
-First, create a [new Slack Incoming Webhook integration][new-webhook].
+To use slackcat you must create a [Slack Incoming Webhook integration][new-webhook].
 
-Then create a `/etc/slackcat.conf` file, and add your new webhook url:
+You can configure slackcat through a config file or environment variables (the latter overriding the former).
+
+Only `webhook_url` is required, `channel`, `username`, and `icon_emoji` are optional, and will be used if not supplied as a command line option.
+
+### Environment Variable
+
+    $ export SLACKCAT_WEBHOOK_URL=https://my.slack.com/services/hooks/incoming-webhook?token=token
+
+### Config File
 
     {
         "webhook_url":"https://my.slack.com/services/hooks/incoming-webhook?token=token"
     }
 
-If you don't have permission to create `/etc/slackcat.conf` then you can create `~/.slackcat.conf` instead.
+In either `/etc/slackcat.conf`, `~/.slackcat.conf`, or `./slackcat.conf`.
 
 ## Usage
 
@@ -37,6 +45,10 @@ By default slackcat will post each message as coming from "user@hostname". If yo
 Slackcat will use the channel specified when you set up the incoming webhook. You can override this in the config file by adding a "channel" option, or you can use the `--channel` flag:
 
     echo "testing" | slackcat --channel #test
+
+You can set an avatar using an [emoji string](http://www.emoji-cheat-sheet.com/):
+
+    echo "we're watching you" | slackcat --icon=:family:
 
 
 
