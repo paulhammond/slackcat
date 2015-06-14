@@ -12,9 +12,11 @@ If you have a working go installation run `go get github.com/paulhammond/slackca
 
 First, create a [new Slack Incoming Webhook integration][new-webhook].
 
-Then create a `/etc/slackcat.conf` file, and add your new webhook url:
+Then create a `/etc/slackcat.conf` file, and add your new webhook url. You can optionally specify a proxy if
+your environment requires it (if you do not require a proxy, leave that key out).
 
     {
+        "proxy": "http://proxyserver:3128",
         "webhook_url":"https://my.slack.com/services/hooks/incoming-webhook?token=token"
     }
 
