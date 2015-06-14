@@ -21,6 +21,7 @@ type Config struct {
 	WebhookUrl string  `json:"webhook_url"`
 	Channel    string  `json:"channel"`
 	Username   *string `json:"username"`
+	Proxy      string  `json:"proxy"`
 }
 
 func ReadConfig() (*Config, error) {
@@ -67,10 +68,20 @@ func (m SlackMsg) Encode() (string, error) {
 	return string(b), nil
 }
 
-func (m SlackMsg) Post(WebhookURL string) error {
+func (m SlackMsg) Post(WebhookURL string, Proxy string) error {
 	encoded, err := m.Encode()
 	if err != nil {
 		return err
+	}
+
+	if len(Proxy) > 0 {
+		proxyUrl, err := url.Parse(Proxy)
+		http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+
+		if err != nil {
+			return err
+		}
+
 	}
 
 	resp, err := http.PostForm(WebhookURL, url.Values{"payload": {encoded}})
@@ -134,7 +145,7 @@ func main() {
 			IconEmoji: *icon,
 		}
 
-		err = msg.Post(cfg.WebhookUrl)
+		err = msg.Post(cfg.WebhookUrl, cfg.Proxy)
 		if err != nil {
 			log.Fatalf("Post failed: %v", err)
 		}
@@ -152,7 +163,7 @@ func main() {
 			IconEmoji: *icon,
 		}
 
-		err = msg.Post(cfg.WebhookUrl)
+		err = msg.Post(cfg.WebhookUrl, cfg.Proxy)
 		if err != nil {
 			log.Fatalf("Post failed: %v", err)
 		}
