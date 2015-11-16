@@ -15,7 +15,8 @@ type Config struct {
 	Username   *string `json:"username"`
 }
 
-func ReadConfig() (*Config, error) {
+func ReadConfig(possible ...string) (*Config, error) {
+                  		       
 	homeDir := ""
 	usr, err := user.Current()
 	if err == nil {
@@ -23,6 +24,10 @@ func ReadConfig() (*Config, error) {
 	}
 
 	for _, path := range []string{"/etc/slackcat.conf", homeDir + "/.slackcat.conf", "./slackcat.conf"} {
+		possible = append(possible, path)
+	}
+
+	for _, path := range possible {
 		file, err := os.Open(path)
 		if os.IsNotExist(err) {
 			continue

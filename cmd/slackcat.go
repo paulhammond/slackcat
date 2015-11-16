@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"github.com/whosonfirst/slackcat"
 	"github.com/ogier/pflag"
 	"os"
@@ -31,7 +30,8 @@ func main() {
 	cfg, err := slackcat.ReadConfig()
 
 	if err != nil {
-		log.Fatalf("Could not read config: %v", err)
+		fmt.Fprintf(os.Stderr, "Could not read config: %v\n", err)
+		os.Exit(1)
 	}
 
 	// By default use "user@server", unless overridden by config. cfg.Username
@@ -46,15 +46,17 @@ func main() {
 
 	pflag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
+		os.Exit(0)
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", defaultName, "name")
 	icon := pflag.StringP("icon", "i", "", "icon")
 	pflag.Parse()
-
+	
 	// was there a message on the command line? If so use it.
 	args := pflag.Args()
+
 	if len(args) > 0 {
 		msg := slackcat.SlackMsg{
 			Channel:   *channel,
@@ -65,14 +67,18 @@ func main() {
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
+
 		if err != nil {
-			log.Fatalf("Post failed: %v", err)
+			fmt.Fprintf(os.Stderr, "Post failed: %v\n", err)
+			os.Exit(1)
 		}
-		return
+
+		os.Exit(0)
 	}
 
 	// ...Otherwise scan stdin
 	scanner := bufio.NewScanner(os.Stdin)
+
 	for scanner.Scan() {
 		msg := slackcat.SlackMsg{
 			Channel:   *channel,
@@ -83,11 +89,17 @@ func main() {
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
+
 		if err != nil {
-			log.Fatalf("Post failed: %v", err)
+			fmt.Fprintf(os.Stderr, "Post failed: %v\n", err)
+			os.Exit(1)
 		}
 	}
+
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error reading: %v", err)
+		fmt.Fprintf(os.Stderr, "Error reading: %v\n", err)
+		os.Exit(1)
 	}
+
+	os.Exit(0)
 }
