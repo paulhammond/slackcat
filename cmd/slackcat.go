@@ -40,8 +40,8 @@ func main() {
 
 	defaultName := username()
 
-	if cfg.Username != nil {
-		defaultName = *cfg.Username
+	if cfg.Username != "" {
+		defaultName = cfg.Username
 	}
 
 	pflag.Usage = func() {

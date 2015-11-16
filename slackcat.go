@@ -10,9 +10,9 @@ import (
 )
 
 type Config struct {
-	WebhookUrl string  `json:"webhook_url"`
-	Channel    string  `json:"channel"`
-	Username   *string `json:"username"`
+	WebhookUrl string `json:"webhook_url"`
+	Channel    string `json:"channel"`
+	Username   string `json:"username"`
 }
 
 func ReadConfig(possible ...string) (*Config, error) {
