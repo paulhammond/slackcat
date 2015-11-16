@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/whosonfirst/slackcat"
 	"github.com/ogier/pflag"
+	"github.com/whosonfirst/slackcat"
 	"os"
 	"os/user"
 	"strings"
@@ -53,7 +53,7 @@ func main() {
 	name := pflag.StringP("name", "n", defaultName, "name")
 	icon := pflag.StringP("icon", "i", "", "icon")
 	pflag.Parse()
-	
+
 	// was there a message on the command line? If so use it.
 	args := pflag.Args()
 

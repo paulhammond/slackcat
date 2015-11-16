@@ -16,7 +16,7 @@ type Config struct {
 }
 
 func ReadConfig(possible ...string) (*Config, error) {
-                  		       
+
 	homeDir := ""
 	usr, err := user.Current()
 	if err == nil {
