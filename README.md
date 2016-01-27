@@ -1,12 +1,23 @@
-# slackcat
+# About slackcat
 
-slackcat is a command line tool that posts messages to [Slack].
+Slackcat is a command line tool that posts messages to [Slack].
 
     $ echo "hello" | slackcat
+    $ slackcat "world"
 
 ## Installing
 
-If you have a working go installation run `go get github.com/paulhammond/slackcat`. Prebuilt binaries will be provided soon.
+To build them at your own, you need to define `GOPATH`:
+
+    $ export GOPATH="$HOME/go/"
+
+Then you have to download dependency:
+
+    $ go get github.com/ogier/pflag
+
+After this you can build slackcat:
+
+    $ go build slackcat.go
 
 ## Configuring
 
@@ -14,15 +25,19 @@ First, create a [new Slack Incoming Webhook integration][new-webhook].
 
 Then create a `/etc/slackcat.conf` file, and add your new webhook url:
 
-    {
-        "webhook_url":"https://my.slack.com/services/hooks/incoming-webhook?token=token"
-    }
+```json
+{
+    "webhook_url":"https://hooks.slack.com/services/.../.../token",
+    "channel":"#myslackchannel",
+    "username":"SlackCat"
+}
+```
 
-If you don't have permission to create `/etc/slackcat.conf` then you can create `~/.slackcat.conf` instead.
+If you don't have permission to create `/etc/slackcat.conf` then you can create `~/.slackcat.conf` or `./slackcat.conf` instead.
 
 ## Usage
 
-slackcat will take each line from stdin and post it as a message to Slack:
+Slackcat will take each line from stdin and post it as a message to Slack:
 
     tail -F logfile | slackcat
 
