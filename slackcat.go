@@ -55,7 +55,6 @@ type SlackMsg struct {
 	Channel   string `json:"channel"`
 	Username  string `json:"username,omitempty"`
 	Text      string `json:"text"`
-	Parse     string `json:"parse"`
 	IconEmoji string `json:"icon_emoji,omitempty"`
 }
 
@@ -129,7 +128,6 @@ func main() {
 		msg := SlackMsg{
 			Channel:   *channel,
 			Username:  *name,
-			Parse:     "full",
 			Text:      strings.Join(args, " "),
 			IconEmoji: *icon,
 		}
@@ -147,7 +145,6 @@ func main() {
 		msg := SlackMsg{
 			Channel:   *channel,
 			Username:  *name,
-			Parse:     "full",
 			Text:      scanner.Text(),
 			IconEmoji: *icon,
 		}
