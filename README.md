@@ -30,13 +30,13 @@ If you'd prefer to provide a message on the command line, you can:
 
     sleep 300; slackcat "done"
 
-By default slackcat will post each message as coming from "user@hostname". If you want a different username, use the `--name` flag:
+By default slackcat will post each message as coming from "user@hostname". If you want a different username, use the `-n` flag:
 
-    echo ":coffee:" | slackcat --name "coffeebot"
+    echo ":coffee:" | slackcat -n "coffeebot"
 
-Slackcat will use the channel specified when you set up the incoming webhook. You can override this in the config file by adding a "channel" option, or you can use the `--channel` flag:
+Slackcat will use the channel specified when you set up the incoming webhook. You can override this in the config file by adding a "channel" option, or you can use the `-c` flag:
 
-    echo "testing" | slackcat --channel #test
+    echo "testing" | slackcat -c "#test"
 
 
 
