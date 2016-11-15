@@ -115,12 +115,13 @@ func main() {
 	}
 
 	pflag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [message]")
+		fmt.Fprintln(os.Stderr, "Usage: slackcat [-c #channel] [-n name] [-i icon] [-b] [message]")
 	}
 
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", defaultName, "name")
 	icon := pflag.StringP("icon", "i", "", "icon")
+	isBuffered := pflag.BoolP("buffered", "b", false, "buffered")
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
@@ -143,20 +144,45 @@ func main() {
 
 	// ...Otherwise scan stdin
 	scanner := bufio.NewScanner(os.Stdin)
+
+	// Buffer for the stdin
+	var buffer []string
+
 	for scanner.Scan() {
+		text := scanner.Text()
+		if !*isBuffered {
+			msg := SlackMsg{
+				Channel:   *channel,
+				Username:  *name,
+				Parse:     "full",
+				Text:      text,
+				IconEmoji: *icon,
+			}
+
+			err = msg.Post(cfg.WebhookUrl)
+			if err != nil {
+				log.Fatalf("Post failed: %v", err)
+			}
+		} else {
+			buffer = append(buffer, text)
+		}
+	}
+
+	if *isBuffered {
 		msg := SlackMsg{
 			Channel:   *channel,
 			Username:  *name,
 			Parse:     "full",
-			Text:      scanner.Text(),
+			Text:      strings.Join(buffer, "\n"),
 			IconEmoji: *icon,
 		}
 
 		err = msg.Post(cfg.WebhookUrl)
 		if err != nil {
-			log.Fatalf("Post failed: %v", err)
+			log.Fatalf("Buffered post failed: %v", err)
 		}
 	}
+
 	if err := scanner.Err(); err != nil {
 		log.Fatalf("Error reading: %v", err)
 	}
