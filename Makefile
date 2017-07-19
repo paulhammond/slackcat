@@ -29,7 +29,4 @@ bin: 	self
 
 fmt:
 	go fmt cmd/*.go
-	go fmt pubsub/*.go
-	go fmt resp/*.go
-
-	go build -o 
+	go fmt *.go
