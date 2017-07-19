@@ -1,0 +1,5 @@
+*~
+pkg
+src
+cmd/slackcat
+!vendor/src
