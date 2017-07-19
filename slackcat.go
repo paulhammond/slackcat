@@ -71,12 +71,16 @@ func (m SlackMsg) Post(WebhookURL string) error {
 	}
 
 	resp, err := http.PostForm(WebhookURL, url.Values{"payload": {encoded}})
+
 	if err != nil {
 		return err
 	}
 
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("Not OK")
 	}
+
 	return nil
 }
