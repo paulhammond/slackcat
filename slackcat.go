@@ -55,7 +55,7 @@ type SlackMsg struct {
 	Channel   string `json:"channel"`
 	Username  string `json:"username,omitempty"`
 	Text      string `json:"text"`
-	Parse     string `json:"parse"`
+	Parse     string `json:"parse,omitempty"`
 	IconEmoji string `json:"icon_emoji,omitempty"`
 }
 
@@ -121,6 +121,7 @@ func main() {
 	channel := pflag.StringP("channel", "c", cfg.Channel, "channel")
 	name := pflag.StringP("name", "n", defaultName, "name")
 	icon := pflag.StringP("icon", "i", "", "icon")
+	parse := pflag.StringP("parse", "p", "", "parse")
 	pflag.Parse()
 
 	// was there a message on the command line? If so use it.
@@ -129,7 +130,7 @@ func main() {
 		msg := SlackMsg{
 			Channel:   *channel,
 			Username:  *name,
-			Parse:     "full",
+			Parse:     *parse,
 			Text:      strings.Join(args, " "),
 			IconEmoji: *icon,
 		}
@@ -147,7 +148,7 @@ func main() {
 		msg := SlackMsg{
 			Channel:   *channel,
 			Username:  *name,
-			Parse:     "full",
+			Parse:     *parse,
 			Text:      scanner.Text(),
 			IconEmoji: *icon,
 		}
